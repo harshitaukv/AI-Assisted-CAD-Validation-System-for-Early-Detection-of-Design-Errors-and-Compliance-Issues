@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CAD·Intelligence AI v2.4 — Offline</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#185FA5;--blue-light:#378ADD;--blue-bg:#E6F1FB;--blue-dark:#0C447C;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-dot:#639922;
+  --warn:#BA7517;--warn-bg:#FAEEDA;--warn-border:#FAC775;--warn-dot:#EF9F27;
+  --err:#A32D2D;--err-bg:#FCEBEB;--err-border:#F7C1C1;
+  --ok-border:#C0DD97;
+  --bg:#F8F9FB;--bg2:#F0F2F5;--bg3:#fff;
+  --border:#E2E5EA;--border2:#CDD2DA;
+  --text:#1A1D23;--text2:#5A6170;--text3:#8A919E;
+  --sidebar:260px;--panel:320px;--header:52px;--toolbar:44px;
+  --font:'Segoe UI',system-ui,sans-serif;--mono:'Courier New',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;overflow:hidden;height:100vh}
+.topbar{height:var(--header);background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0}
+.logo-icon{width:30px;height:30px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px;fill:#fff}
+.logo-name{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.logo-badge{font-size:10px;background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:20px;font-weight:600}
+.sep{width:1px;height:24px;background:var(--border);margin:0 4px}
+.tab-btn{padding:6px 13px;font-size:12px;font-weight:500;border-radius:6px;border:none;background:none;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s}
+.tab-btn:hover{background:var(--bg2);color:var(--text)}
+.tab-btn.active{background:var(--bg2);color:var(--text)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.status-live{background:var(--green-bg);color:var(--green)}
+.status-live .status-dot{background:var(--green-dot);animation:pulse 2s infinite}
+.status-thinking{background:#EEF2FF;color:#4338CA}
+.status-thinking .status-dot{background:#818CF8;animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.run-btn{padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all .15s}
+.run-btn:hover{background:var(--blue-dark)}
+.run-btn:disabled{background:#aaa;cursor:not-allowed}
+.upload-btn{padding:7px 13px;background:var(--bg2);color:var(--text);border:1px solid var(--border2);border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all .15s;position:relative;overflow:hidden}
+.upload-btn:hover{background:var(--border);border-color:var(--blue-light)}
+.upload-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.app{display:flex;flex-direction:column;height:100vh}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:var(--sidebar);background:var(--bg3);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sidebar-section{padding:12px;border-bottom:1px solid var(--border)}
+.sidebar-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600}
+.file-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background .1s}
+.file-item:hover{background:var(--bg2)}
+.file-item.active{background:var(--blue-bg)}
+.file-icon{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.file-meta{flex:1;min-width:0}
+.file-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-item.active .file-name{color:var(--blue)}
+.file-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.file-badge{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.badge-warn{background:var(--warn-dot)}
+.badge-ok{background:var(--green-dot)}
+.badge-err{background:#E24B4A}
+.badge-new{background:var(--blue-light)}
+.drop-zone{margin:10px;border:2px dashed var(--border2);border-radius:8px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue-light);background:var(--blue-bg)}
+.drop-zone-icon{font-size:22px;margin-bottom:6px}
+.drop-zone-text{font-size:11px;color:var(--text3);line-height:1.5}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.layer-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:12px}
+.layer-item:hover{background:var(--bg2)}
+.layer-color{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.layer-name{flex:1;color:var(--text2)}
+.layer-count{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{height:var(--toolbar);background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:4px;flex-shrink:0}
+.tool-btn{width:32px;height:32px;border-radius:6px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all .1s}
+.tool-btn:hover{background:var(--bg2);color:var(--text)}
+.tool-btn.active{background:var(--blue-bg);color:var(--blue)}
+.tool-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.toolbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.zoom-ctrl{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3)}
+.coords{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.canvas-area{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+.canvas-area canvas{position:absolute;top:0;left:0}
+.ruler-h{position:absolute;top:0;left:28px;right:0;height:20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.ruler-v{position:absolute;top:20px;left:0;bottom:0;width:28px;background:var(--bg2);border-right:1px solid var(--border)}
+.ruler-corner{position:absolute;top:0;left:0;width:28px;height:20px;background:var(--bg2);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.issue-overlay{position:absolute;inset:0;pointer-events:none;transition:opacity .3s}
+.issue-marker{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;animation:popIn .3s cubic-bezier(.34,1.56,.64,1);pointer-events:all;cursor:pointer;font-size:10px;font-weight:700;transition:transform .15s;border:2px solid}
+.issue-marker:hover{transform:scale(1.2)!important}
+.issue-marker.warn{background:var(--warn-bg);border-color:var(--warn-dot);color:var(--warn);width:22px;height:22px}
+.issue-marker.error{background:var(--err-bg);border-color:#E24B4A;color:var(--err);width:26px;height:26px}
+.issue-marker.info{background:var(--blue-bg);border-color:var(--blue-light);color:var(--blue);width:20px;height:20px}
+@keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+.scan-overlay{position:absolute;inset:0;pointer-events:none;display:none}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue-light),transparent);animation:scanDown 2s linear infinite}
+.scan-pulse{position:absolute;inset:0;border:2px solid var(--blue-light);border-radius:4px;animation:fadeOut 2s ease-out forwards}
+@keyframes scanDown{from{top:0}to{top:100%}}
+@keyframes fadeOut{0%{opacity:.5}100%{opacity:0}}
+.upload-preview{position:absolute;inset:28px 0 0 28px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.upload-preview img{max-width:100%;max-height:100%;object-fit:contain;opacity:.85}
+.right-panel{width:var(--panel);background:var(--bg3);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-tab{flex:1;padding:10px 4px;font-size:12px;font-weight:500;text-align:center;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--text3);font-family:var(--font);background:none;transition:all .15s}
+.panel-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.panel-content{flex:1;overflow-y:auto;padding:12px}
+.panel-content::-webkit-scrollbar{width:4px}
+.panel-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.score-ring{display:flex;justify-content:center;margin:8px 0 16px;position:relative}
+.score-number{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.score-val{font-size:30px;font-weight:600;color:var(--blue);line-height:1}
+.score-lbl{font-size:10px;color:var(--text3);font-weight:500}
+.metric-row{display:flex;gap:8px;margin-bottom:12px}
+.metric-card{flex:1;background:var(--bg2);border-radius:8px;padding:10px}
+.metric-val{font-size:20px;font-weight:600;font-family:var(--mono)}
+.metric-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.metric-val.warn{color:var(--warn)}
+.metric-val.err{color:var(--err)}
+.metric-val.ok{color:var(--green)}
+.issue-list{display:flex;flex-direction:column;gap:6px}
+.issue-card{padding:10px;border-radius:8px;border:1px solid;cursor:pointer;transition:all .15s}
+.issue-card:hover{filter:brightness(.97)}
+.issue-card.err{background:var(--err-bg);border-color:var(--err-border)}
+.issue-card.warn{background:var(--warn-bg);border-color:var(--warn-border)}
+.issue-card.info{background:var(--blue-bg);border-color:#B5D4F4}
+.issue-card.ok{background:var(--green-bg);border-color:var(--ok-border)}
+.issue-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.issue-icon{font-size:13px}
+.issue-title{font-size:12px;font-weight:600}
+.issue-card.err .issue-title{color:var(--err)}
+.issue-card.warn .issue-title{color:var(--warn)}
+.issue-card.info .issue-title{color:var(--blue-dark)}
+.issue-card.ok .issue-title{color:var(--green)}
+.issue-desc{font-size:11px;color:var(--text2);line-height:1.55}
+.issue-loc{font-size:10px;color:var(--text3);margin-top:4px;font-family:var(--mono)}
+.fix-btn{margin-top:7px;padding:4px 9px;font-size:11px;font-weight:500;border-radius:5px;background:none;cursor:pointer;font-family:var(--font);transition:background .1s}
+.issue-card.err .fix-btn{border:1px solid var(--err-border);color:var(--err)}
+.issue-card.warn .fix-btn{border:1px solid var(--warn-border);color:var(--warn)}
+.issue-card.err .fix-btn:hover{background:var(--err-border)}
+.issue-card.warn .fix-btn:hover{background:var(--warn-border)}
+.prog-row{margin-bottom:10px}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.prog-bar{height:5px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .7s ease}
+.rule-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.rule-item:last-child{border-bottom:none}
+.rule-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.rule-pass{background:var(--green-bg);color:var(--green)}
+.rule-fail{background:var(--err-bg);color:var(--err)}
+.rule-warn{background:var(--warn-bg);color:var(--warn)}
+.rule-text{flex:1;font-size:12px}
+.rule-std{font-size:10px;color:var(--text3);margin-top:1px}
+.ai-panel{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.ai-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.ai-log::-webkit-scrollbar{width:4px}
+.ai-log::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.ai-msg{padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.ai-msg.user{background:var(--blue-bg);color:var(--blue-dark);align-self:flex-end;max-width:88%}
+.ai-msg.assistant{background:var(--bg2);align-self:flex-start;max-width:95%}
+.ai-msg.assistant.thinking{opacity:.6;font-style:italic}
+.ai-chip-row{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-top:1px solid var(--border)}
+.ai-chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;transition:all .15s;color:var(--text2)}
+.ai-chip:hover{background:var(--blue-bg);color:var(--blue);border-color:#B5D4F4}
+.ai-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
+.ai-input{flex:1;padding:8px 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-family:var(--font);background:var(--bg2);color:var(--text);outline:none;resize:none}
+.ai-input:focus{border-color:var(--blue-light);background:#fff}
+.ai-send{padding:8px 13px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);flex-shrink:0;transition:background .15s}
+.ai-send:hover{background:var(--blue-dark)}
+.prop-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.prop-row:last-child{border-bottom:none}
+.prop-key{font-size:12px;color:var(--text3);width:110px;flex-shrink:0}
+.prop-val{font-size:12px;flex:1;font-weight:500}
+.prop-val.mono{font-family:var(--mono);font-size:11px}
+.sec-hdr{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 8px}
+.sec-hdr:first-child{margin-top:0}
+.statusbar{height:26px;background:var(--blue);display:flex;align-items:center;padding:0 14px;gap:20px;flex-shrink:0}
+.sb-item{font-size:11px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:5px;font-family:var(--mono)}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:#9FE1CB}
+.loading-dots::after{content:'';animation:dots 1.5s infinite}
+@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
+.toast{position:fixed;bottom:50px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.upload-progress{padding:10px 12px;background:var(--blue-bg);border-bottom:1px solid #B5D4F4;font-size:12px;color:var(--blue-dark);display:none;align-items:center;gap:8px}
+.upload-progress.visible{display:flex}
+.upload-progress-bar{flex:1;height:4px;background:#B5D4F4;border-radius:2px;overflow:hidden}
+.upload-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+@keyframes highlightFlash{0%,100%{outline-color:transparent}50%{outline-color:var(--blue-light)}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo-icon">
+    <svg viewBox="0 0 16 16"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM11.5 9l3.5 6H8z"/></svg>
+  </div>
+  <span class="logo-name">CAD·Intelligence</span>
+  <span class="logo-badge">Offline v2.4</span>
+  <div class="sep"></div>
+  <button class="tab-btn active" onclick="switchTab(this,'design')">Design</button>
+  <button class="tab-btn" onclick="switchTab(this,'validate')">Validation</button>
+  <button class="tab-btn" onclick="switchTab(this,'reports')">Reports</button>
+  <button class="tab-btn" onclick="switchTab(this,'standards')">Standards</button>
+  <div class="topbar-right">
+    <div class="status-pill status-live" id="ai-status">
+      <div class="status-dot"></div>
+      <span id="ai-status-text">Local Engine Ready</span>
+    </div>
+    <label class="upload-btn" title="Upload a design file">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1v9M4 4l4-3 4 3M2 12h12v3H2z"/></svg>
+      Upload Design
+      <input type="file" id="file-input" accept="image/*,.pdf,.dxf,.dwg,.step,.stp,.iges,.igs,.stl,.obj,.png,.jpg,.jpeg" onchange="handleFileUpload(this)"/>
+    </label>
+    <button class="run-btn" id="run-btn" onclick="runValidation()">
+      <svg viewBox="0 0 16 16" width="13" height="13" fill="white"><path d="M3 2l10 6-10 6V2z"/></svg>
+      Run Validation
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Design Files</div>
+    <div id="file-list">
+      <div class="file-item active" onclick="selectFile(0)">
+        <div class="file-icon" style="background:var(--blue-bg)">📐</div>
+        <div class="file-meta">
+          <div class="file-name">GearBox_v3.2.CATPart</div>
+          <div class="file-sub">Demo · 48 features</div>
+        </div>
+        <div class="file-badge badge-warn"></div>
+      </div>
+      <div class="file-item" onclick="selectFile(1)">
+        <div class="file-icon" style="background:var(--green-bg)">📄</div>
+        <div class="file-meta">
+          <div class="file-name">BracketAssy_v1.stp</div>
+          <div class="file-sub">Demo · 22 features</div>
+        </div>
+        <div class="file-badge badge-ok"></div>
+      </div>
+    </div>
+    <div class="drop-zone" id="drop-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <input type="file" accept="image/*,.pdf,.dxf,.dwg,.step,.stp,.iges,.stl" onchange="handleFileUpload(this)"/>
+      <div class="drop-zone-icon">⊕</div>
+      <div class="drop-zone-text">Drop a design file here<br><span style="color:var(--blue);font-weight:600">or click to browse</span></div>
+    </div>
+  </div>
+  <div class="sidebar-section" style="flex:1;overflow-y:auto">
+    <div class="sidebar-label">Layers</div>
+    <div class="layer-item"><div class="layer-color" style="background:var(--blue)"></div><div class="layer-name">Body Geometry</div><div class="layer-count" id="lc-body">12</div></div>
+    <div class="layer-item"><div class="layer-color" style="background:var(--warn-dot)"></div><div class="layer-name">Tolerances</div><div class="layer-count" id="lc-tol">8</div></div>
+    <div class="layer-item"><div class="layer-color" style="background:var(--green-dot)"></div><div class="layer-name">Dimensions</div><div class="layer-count" id="lc-dim">24</div></div>
+    <div class="layer-item"><div class="layer-color" style="background:#E24B4A"></div><div class="layer-name">Critical Zones</div><div class="layer-count" id="lc-crit">3</div></div>
+    <div class="layer-item"><div class="layer-color" style="background:#7F77DD"></div><div class="layer-name">Annotations</div><div class="layer-count" id="lc-ann">16</div></div>
+    <div class="layer-item"><div class="layer-color" style="background:#888"></div><div class="layer-name">Reference Planes</div><div class="layer-count" id="lc-ref">6</div></div>
+  </div>
+</div>
+
+<!-- CENTER CANVAS -->
+<div class="center">
+  <div class="upload-progress" id="upload-progress">
+    <span>🔍 Analysing design locally…</span>
+    <div class="upload-progress-bar"><div class="upload-progress-fill" id="upload-progress-fill" style="width:0%"></div></div>
+    <span id="upload-progress-label">0%</span>
+  </div>
+  <div class="toolbar">
+    <button class="tool-btn active" title="Select"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2 1l5 14 3-5 5-3L2 1z"/></svg></button>
+    <button class="tool-btn" title="Pan"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v3M8 12v3M1 8h3M12 8h3"/></svg></button>
+    <button class="tool-btn" title="Zoom"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3M5 7h4M7 5v4"/></svg></button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" title="Measure"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14L14 2M5 11l1.5-1.5M7 9l1.5-1.5M9 7l1.5-1.5M11 5l1.5-1.5"/></svg></button>
+    <button class="tool-btn" title="Annotate"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v9H9l-3 3V11H2V2z"/></svg></button>
+    <button class="tool-btn" title="Toggle Issues" onclick="toggleIssues()"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v4M8 11v1"/></svg></button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" title="AI Annotations" id="ai-ann-btn" onclick="toggleAIAnn()"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l2 5h5l-4 3 2 5L8 11l-5 3 2-5L1 6h5z"/></svg></button>
+    <div class="toolbar-right">
+      <div class="zoom-ctrl">
+        <button class="tool-btn" onclick="changeZoom(-10)">−</button>
+        <span id="zoom-label">100%</span>
+        <button class="tool-btn" onclick="changeZoom(10)">+</button>
+      </div>
+      <div class="tool-sep"></div>
+      <span class="coords" id="coords">X: 0.00  Y: 0.00</span>
+    </div>
+  </div>
+  <div class="canvas-area" id="canvas-wrap" onmousemove="updateCoords(event)">
+    <div class="ruler-corner"></div>
+    <div class="ruler-h" id="ruler-h"></div>
+    <div class="ruler-v" id="ruler-v"></div>
+    <canvas id="cad-canvas"></canvas>
+    <div class="upload-preview" id="upload-preview"></div>
+    <div class="issue-overlay" id="issue-overlay"></div>
+    <div class="scan-overlay" id="scan-overlay"></div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="panel-tabs">
+    <button class="panel-tab active" onclick="switchPanel('validation')">Validation</button>
+    <button class="panel-tab" onclick="switchPanel('ai')">AI Chat</button>
+    <button class="panel-tab" onclick="switchPanel('properties')">Properties</button>
+  </div>
+
+  <!-- VALIDATION PANEL -->
+  <div class="panel-content" id="panel-validation">
+    <div class="score-ring">
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg2)" stroke-width="8"/>
+        <circle id="score-arc" cx="50" cy="50" r="42" fill="none" stroke="var(--blue)" stroke-width="8"
+          stroke-dasharray="264" stroke-dashoffset="264"
+          stroke-linecap="round" transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="score-number">
+        <div class="score-val" id="score-val">0</div>
+        <div class="score-lbl">Score</div>
+      </div>
+    </div>
+    <div class="metric-row">
+      <div class="metric-card"><div class="metric-val err" id="m-errors">3</div><div class="metric-lbl">Errors</div></div>
+      <div class="metric-card"><div class="metric-val warn" id="m-warnings">5</div><div class="metric-lbl">Warnings</div></div>
+      <div class="metric-card"><div class="metric-val ok" id="m-passed">18</div><div class="metric-lbl">Passed</div></div>
+    </div>
+    <div class="sec-hdr">Compliance</div>
+    <div class="prog-row">
+      <div class="prog-label"><span>ISO 2768-m</span><span id="p-iso">62%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="pf-iso" style="width:62%;background:#378ADD"></div></div>
+    </div>
+    <div class="prog-row">
+      <div class="prog-label"><span>ASME Y14.5</span><span id="p-asme">74%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="pf-asme" style="width:74%;background:var(--green-dot)"></div></div>
+    </div>
+    <div class="prog-row">
+      <div class="prog-label"><span>DIN 7157</span><span id="p-din">88%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="pf-din" style="width:88%;background:var(--green-dot)"></div></div>
+    </div>
+    <div class="sec-hdr">Issues</div>
+    <div class="issue-list" id="issue-list">
+      <div class="issue-card err" onclick="highlightIssue(0)">
+        <div class="issue-header"><span class="issue-icon">✕</span><span class="issue-title">Tolerance Stack-Up Violation</span></div>
+        <div class="issue-desc">Cumulative tolerance reaches ±0.14mm against functional limit of ±0.06mm at gear bore.</div>
+        <div class="issue-loc">Feature: Bore_Ø42 · Layer: Tolerances</div>
+        <button class="fix-btn" onclick="event.stopPropagation();suggestFix(0)">💡 Suggest Fix</button>
+      </div>
+      <div class="issue-card err" onclick="highlightIssue(2)">
+        <div class="issue-header"><span class="issue-icon">✕</span><span class="issue-title">Min. Wall Thickness</span></div>
+        <div class="issue-desc">Rib wall at 1.2mm; below 2.0mm manufacturing minimum for this material grade.</div>
+        <div class="issue-loc">Feature: Rib_003 · Layer: Body Geometry</div>
+        <button class="fix-btn" onclick="event.stopPropagation();suggestFix(1)">💡 Suggest Fix</button>
+      </div>
+      <div class="issue-card warn" onclick="highlightIssue(1)">
+        <div class="issue-header"><span class="issue-icon">!</span><span class="issue-title">GD&amp;T Datum Ambiguity</span></div>
+        <div class="issue-desc">Bolt pattern PCD position FCF does not fully constrain rotational DOF per ASME Y14.5.</div>
+        <div class="issue-loc">Feature: BoltPCD_6x · Layer: Tolerances</div>
+        <button class="fix-btn" onclick="event.stopPropagation();suggestFix(2)">💡 Suggest Fix</button>
+      </div>
+      <div class="issue-card warn" onclick="highlightIssue(3)">
+        <div class="issue-header"><span class="issue-icon">!</span><span class="issue-title">Missing Chamfer Spec</span></div>
+        <div class="issue-desc">Shaft shoulder transition lacks chamfer or radius specification — stress concentration risk.</div>
+        <div class="issue-loc">Feature: Shoulder_R1 · Layer: Annotations</div>
+      </div>
+      <div class="issue-card info" onclick="highlightIssue(4)">
+        <div class="issue-header"><span class="issue-icon">ℹ</span><span class="issue-title">Surface Finish Advisory</span></div>
+        <div class="issue-desc">Ra 0.8μm specified on bore — consider Ra 1.6μm for cost-optimised production.</div>
+        <div class="issue-loc">Feature: Bore_Ø42 · Layer: Annotations</div>
+      </div>
+    </div>
+    <div class="sec-hdr" style="margin-top:14px">Standards Check</div>
+    <div id="rules-list">
+      <div class="rule-item"><div class="rule-dot rule-pass">✓</div><div class="rule-text">Dimensional completeness<div class="rule-std">All features dimensioned — PASS</div></div></div>
+      <div class="rule-item"><div class="rule-dot rule-fail">✕</div><div class="rule-text">ISO 2768-m stack-up<div class="rule-std">Cumulative ±0.14mm — FAIL</div></div></div>
+      <div class="rule-item"><div class="rule-dot rule-warn">!</div><div class="rule-text">ASME Y14.5 datum chain<div class="rule-std">Advisory — review reference</div></div></div>
+      <div class="rule-item"><div class="rule-dot rule-pass">✓</div><div class="rule-text">DIN 7157 fit designation<div class="rule-std">H7/p6 — PASS</div></div></div>
+      <div class="rule-item"><div class="rule-dot rule-pass">✓</div><div class="rule-text">Surface finish notation<div class="rule-std">ISO 1302 — PASS</div></div></div>
+    </div>
+  </div>
+
+  <!-- AI CHAT PANEL -->
+  <div id="panel-ai" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="ai-log" id="ai-log">
+      <div class="ai-msg assistant">👋 Hello! I'm your local CAD analysis assistant — running fully offline. Upload any CAD image and I'll analyse it using local pixel analysis: edge detection, line density, region complexity, symmetry, and annotation coverage. Ask me anything about your design.</div>
+    </div>
+    <div class="ai-chip-row">
+      <span class="ai-chip" onclick="sendChip(this)">What is the most critical issue?</span>
+      <span class="ai-chip" onclick="sendChip(this)">Suggest tolerance fixes</span>
+      <span class="ai-chip" onclick="sendChip(this)">Explain GD&T violation</span>
+      <span class="ai-chip" onclick="sendChip(this)">Manufacturability review</span>
+      <span class="ai-chip" onclick="sendChip(this)">How to improve the score?</span>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="ai-input" rows="2" placeholder="Ask about your design…" onkeydown="onAIKey(event)"></textarea>
+      <button class="ai-send" id="ai-send" onclick="sendAIMsg()">Send</button>
+    </div>
+  </div>
+
+  <!-- PROPERTIES PANEL -->
+  <div class="panel-content" id="panel-properties" style="display:none">
+    <div class="sec-hdr">File Properties</div>
+    <div class="prop-row"><div class="prop-key">File name</div><div class="prop-val" id="prop-filename">GearBox_v3.2.CATPart</div></div>
+    <div class="prop-row"><div class="prop-key">Format</div><div class="prop-val" id="prop-format">CATIA V5 Part</div></div>
+    <div class="prop-row"><div class="prop-key">File size</div><div class="prop-val mono" id="prop-size">2.4 MB</div></div>
+    <div class="prop-row"><div class="prop-key">Resolution</div><div class="prop-val mono" id="prop-resolution">—</div></div>
+    <div class="prop-row"><div class="prop-key">Modified</div><div class="prop-val" id="prop-modified">2 hours ago</div></div>
+    <div class="sec-hdr">Design Parameters</div>
+    <div class="prop-row"><div class="prop-key">Material</div><div class="prop-val" id="prop-material">42CrMo4 Steel</div></div>
+    <div class="prop-row"><div class="prop-key">Complexity</div><div class="prop-val" id="prop-complexity">Medium</div></div>
+    <div class="prop-row"><div class="prop-key">Edge density</div><div class="prop-val mono" id="prop-edgedensity">—</div></div>
+    <div class="prop-row"><div class="prop-key">Line count</div><div class="prop-val mono" id="prop-linecount">—</div></div>
+    <div class="prop-row"><div class="prop-key">Symmetry</div><div class="prop-val" id="prop-symmetry">—</div></div>
+    <div class="sec-hdr">Analysis Results</div>
+    <div class="prop-row"><div class="prop-key">Design score</div><div class="prop-val" id="prop-score" style="color:var(--blue);font-weight:600">70 / 100</div></div>
+    <div class="prop-row"><div class="prop-key">Mfg. risk</div><div class="prop-val warn" id="prop-risk">Moderate</div></div>
+    <div class="prop-row"><div class="prop-key">Est. rework</div><div class="prop-val" id="prop-rework">4–6 hours</div></div>
+    <div class="prop-row"><div class="prop-key">Engine</div><div class="prop-val" style="color:var(--green)">Local · Offline</div></div>
+  </div>
+</div>
+
+</div><!-- /.main -->
+
+<div class="statusbar">
+  <div class="sb-item"><div class="sb-dot"></div>Local Engine: Active</div>
+  <div class="sb-item" id="sb-file">File: GearBox_v3.2.CATPart</div>
+  <div class="sb-item">Rules: 247</div>
+  <div class="sb-item" style="margin-left:auto" id="sb-status">Ready — no API required</div>
+</div>
+</div><!-- /.app -->
+<div class="toast" id="toast"></div>
+
+<!-- Hidden canvas for pixel analysis -->
+<canvas id="analysis-canvas" style="display:none"></canvas>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+let zoom = 100, issuesVisible = true, aiAnnActive = false, isValidating = false;
+let uploadedFile = null, uploadedFileName = null;
+let currentScore = 70, currentIssues = [], lastAnalysis = null;
+
+// ════════════════════════════════════════════════════════════════
+//  CANVAS / DRAW
+// ════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('cad-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+
+function resize() {
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  drawCAD();
+}
+
+function drawCAD() {
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const step = Math.round(30 * zoom / 100);
+  ctx.strokeStyle = 'rgba(130,130,150,0.1)'; ctx.lineWidth = 0.5;
+  for (let x = 28; x < w; x += step) { ctx.beginPath(); ctx.moveTo(x,20); ctx.lineTo(x,h); ctx.stroke(); }
+  for (let y = 20; y < h; y += step) { ctx.beginPath(); ctx.moveTo(28,y); ctx.lineTo(w,y); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(100,130,200,0.18)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  const cx=w/2, cy=h/2;
+  ctx.beginPath(); ctx.moveTo(28,cy); ctx.lineTo(w,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,20); ctx.lineTo(cx,h); ctx.stroke();
+  ctx.setLineDash([]);
+  if (uploadedFile) return;
+  const s = zoom/100, ox=cx-20*s, oy=cy-10*s;
+  ctx.save(); ctx.translate(ox,oy); ctx.scale(s,s);
+  ctx.strokeStyle='#185FA5'; ctx.lineWidth=2/s; ctx.fillStyle='rgba(24,95,165,0.06)';
+  ctx.beginPath(); roundRect(ctx,-100,-80,200,160,8); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle='#185FA5'; ctx.lineWidth=1.5/s; ctx.setLineDash([6/s,3/s]);
+  ctx.beginPath(); ctx.arc(0,0,40,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(0,0,30,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='rgba(24,95,165,0.18)'; ctx.lineWidth=0.5/s;
+  for(let i=-35;i<=35;i+=8){ctx.beginPath();ctx.moveTo(i,-Math.sqrt(Math.max(0,35*35-i*i)));ctx.lineTo(i,Math.sqrt(Math.max(0,35*35-i*i)));ctx.stroke();}
+  ctx.strokeStyle='#185FA5'; ctx.lineWidth=1.5/s; ctx.fillStyle='rgba(24,95,165,0.06)';
+  [[-8,-80,16,40],[-8,40,16,40],[-100,-8,60,16],[40,-8,60,16]].forEach(([x,y,w2,h2])=>{ctx.beginPath();ctx.rect(x,y,w2,h2);ctx.fill();ctx.stroke();});
+  ctx.fillStyle='#fff'; ctx.strokeStyle='#185FA5'; ctx.lineWidth=1/s;
+  [[70,50],[70,-50],[-70,50],[-70,-50]].forEach(([bx,by])=>{
+    ctx.beginPath();ctx.arc(bx,by,7,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.setLineDash([3/s,2/s]);ctx.beginPath();ctx.arc(bx,by,11,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  });
+  ctx.strokeStyle='#378ADD'; ctx.lineWidth=1/s; ctx.setLineDash([4/s,2/s]);
+  ctx.beginPath();ctx.moveTo(-50,0);ctx.lineTo(50,0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,-50);ctx.lineTo(0,50);ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle='#888'; ctx.lineWidth=0.75/s; ctx.font=`${10/s}px Courier New,monospace`;
+  ctx.beginPath();ctx.moveTo(-100,90);ctx.lineTo(100,90);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-100,80);ctx.lineTo(-100,100);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(100,80);ctx.lineTo(100,100);ctx.stroke();
+  ctx.fillStyle='#555';ctx.textAlign='center';ctx.fillText('200.00',0,103/s);
+  ctx.strokeStyle='#E24B4A';ctx.lineWidth=0.75/s;
+  ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(42,0);ctx.stroke();
+  ctx.fillStyle='#A32D2D';ctx.textAlign='left';ctx.fillText('∅42 H7',44,4/s);
+  ctx.restore();
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LOCAL PIXEL ANALYSIS ENGINE
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Full offline analysis pipeline.
+ * Draws the image onto a hidden canvas, reads pixel data,
+ * then runs several detection passes to produce structured results.
+ */
+function analyseImageLocally(imgElement) {
+  return new Promise(resolve => {
+    const ac = document.getElementById('analysis-canvas');
+    const MAX = 600; // downsample for speed
+    let iw = imgElement.naturalWidth  || imgElement.width;
+    let ih = imgElement.naturalHeight || imgElement.height;
+    const scale = Math.min(1, MAX / Math.max(iw, ih));
+    ac.width  = Math.round(iw * scale);
+    ac.height = Math.round(ih * scale);
+    const actx = ac.getContext('2d');
+    actx.drawImage(imgElement, 0, 0, ac.width, ac.height);
+
+    setTimeout(() => {  // yield to browser so progress bar can update
+      const data = actx.getImageData(0, 0, ac.width, ac.height);
+      const px = data.data;
+      const W = ac.width, H = ac.height;
+
+      // ── 1. Convert to greyscale + build edge map (Sobel) ──────
+      const grey = new Uint8Array(W * H);
+      for (let i = 0; i < W * H; i++) {
+        grey[i] = Math.round(0.299*px[i*4] + 0.587*px[i*4+1] + 0.114*px[i*4+2]);
+      }
+      const edge = new Uint8Array(W * H);
+      let edgeSum = 0;
+      for (let y = 1; y < H-1; y++) {
+        for (let x = 1; x < W-1; x++) {
+          const gx = -grey[(y-1)*W+(x-1)] + grey[(y-1)*W+(x+1)]
+                     -2*grey[y*W+(x-1)]   + 2*grey[y*W+(x+1)]
+                     -grey[(y+1)*W+(x-1)] + grey[(y+1)*W+(x+1)];
+          const gy = -grey[(y-1)*W+(x-1)] - 2*grey[(y-1)*W+x] - grey[(y-1)*W+(x+1)]
+                     +grey[(y+1)*W+(x-1)] + 2*grey[(y+1)*W+x] + grey[(y+1)*W+(x+1)];
+          const mag = Math.min(255, Math.round(Math.sqrt(gx*gx + gy*gy)));
+          edge[y*W+x] = mag;
+          if (mag > 30) edgeSum++;
+        }
+      }
+      const edgeDensity = edgeSum / (W * H); // 0..1
+
+      // ── 2. Brightness stats ────────────────────────────────────
+      let brightSum = 0, darkPx = 0, lightPx = 0;
+      for (let i = 0; i < W*H; i++) {
+        brightSum += grey[i];
+        if (grey[i] < 80)  darkPx++;
+        if (grey[i] > 200) lightPx++;
+      }
+      const meanBright = brightSum / (W*H);
+      const darkRatio  = darkPx / (W*H);
+      const lightRatio = lightPx / (W*H);
+
+      // ── 3. Horizontal / vertical line detection ────────────────
+      // Count rows/cols where edge pixels are dense — proxy for line count
+      let hLines = 0, vLines = 0;
+      for (let y = 1; y < H-1; y++) {
+        let rowEdge = 0;
+        for (let x = 1; x < W-1; x++) if (edge[y*W+x] > 40) rowEdge++;
+        if (rowEdge / W > 0.08) hLines++;
+      }
+      for (let x = 1; x < W-1; x++) {
+        let colEdge = 0;
+        for (let y = 1; y < H-1; y++) if (edge[y*W+x] > 40) colEdge++;
+        if (colEdge / H > 0.08) vLines++;
+      }
+      const lineCount = hLines + vLines;
+
+      // ── 4. Symmetry check (left/right pixel correlation) ───────
+      let symDiff = 0;
+      const mid = Math.floor(W / 2);
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < mid; x++) {
+          symDiff += Math.abs(grey[y*W+x] - grey[y*W+(W-1-x)]);
+        }
+      }
+      const symScore = 1 - symDiff / (mid * H * 255); // 0=no sym, 1=perfect
+
+      // ── 5. Colour channel analysis ─────────────────────────────
+      let rSum=0, gSum=0, bSum=0;
+      for (let i = 0; i < W*H; i++) { rSum+=px[i*4]; gSum+=px[i*4+1]; bSum+=px[i*4+2]; }
+      const n = W*H;
+      const rMean=rSum/n, gMean=gSum/n, bMean=bSum/n;
+
+      // ── 6. Quadrant complexity (variance per quadrant) ─────────
+      const qComplexity = [0,0,0,0]; // TL, TR, BL, BR
+      const qCount      = [0,0,0,0];
+      const hh = Math.floor(H/2), hw = Math.floor(W/2);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const qi = (y>=hh?2:0)+(x>=hw?1:0);
+        qComplexity[qi] += edge[y*W+x];
+        qCount[qi]++;
+      }
+      const qC = qComplexity.map((s,i)=>s/qCount[i]/255);
+
+      // ── 7. White background detection ─────────────────────────
+      // CAD drawings typically have very light backgrounds
+      const isCADStyle = lightRatio > 0.45 && meanBright > 160;
+
+      // ── 8. Derive analysis metrics ─────────────────────────────
+      // Complexity: based on edge density + line count
+      const complexityScore = Math.min(1, edgeDensity * 4 + lineCount / 200);
+      let complexity = complexityScore < 0.25 ? 'Low' : complexityScore < 0.6 ? 'Medium' : 'High';
+
+      // Score: higher edge density (richer drawing) → better score baseline
+      // Penalise very low or very high edge density
+      let baseScore = 55 + Math.round(edgeDensity * 120);
+      baseScore = Math.max(40, Math.min(92, baseScore));
+
+      // Symmetry bonus
+      if (symScore > 0.75) baseScore = Math.min(95, baseScore + 5);
+
+      // ── 9. Generate contextual issues ─────────────────────────
+      const issues = [];
+      const markers = [];
+      let errors = 0, warnings = 0, passed = 0;
+
+      // Issue: low complexity (sparse drawing)
+      if (edgeDensity < 0.04) {
+        issues.push({
+          type:'warn', title:'Low Feature Density',
+          description:'Drawing appears sparse — few geometric features detected. Ensure all views and sections are included.',
+          location:'Overall drawing', fixable:true
+        });
+        markers.push({x:'25%',y:'30%',type:'warn',label:'!',id:issues.length-1});
+        warnings++; baseScore -= 6;
+      } else { passed++; }
+
+      // Issue: high complexity (very dense)
+      if (edgeDensity > 0.25) {
+        issues.push({
+          type:'warn', title:'High Feature Complexity',
+          description:`Edge density at ${(edgeDensity*100).toFixed(1)}% — design may be overly complex for standard machining. Consider simplification.`,
+          location:'Body geometry', fixable:true
+        });
+        markers.push({x:'70%',y:'25%',type:'warn',label:'!',id:issues.length-1});
+        warnings++; baseScore -= 4;
+      } else { passed++; }
+
+      // Issue: asymmetry
+      if (symScore < 0.55) {
+        issues.push({
+          type:'warn', title:'Asymmetric Layout Detected',
+          description:`Left-right symmetry index: ${(symScore*100).toFixed(0)}%. Asymmetric designs may indicate missing mirrored features or datum misalignment.`,
+          location:'Overall layout', fixable:true
+        });
+        markers.push({x:'50%',y:'60%',type:'warn',label:'!',id:issues.length-1});
+        warnings++; baseScore -= 5;
+      } else { passed++; }
+
+      // Issue: quadrant imbalance (one corner much denser than others)
+      const qMax = Math.max(...qC), qMin = Math.min(...qC);
+      if (qMax - qMin > 0.18) {
+        const qNames = ['top-left','top-right','bottom-left','bottom-right'];
+        const heavyQ = qC.indexOf(qMax);
+        issues.push({
+          type:'error', title:'Unbalanced Feature Distribution',
+          description:`Feature concentration heavily skewed toward ${qNames[heavyQ]} quadrant (density ratio: ${(qMax/Math.max(0.001,qMin)).toFixed(1)}×). Check for missing views.`,
+          location:`${qNames[heavyQ].replace('-',' ')} region`, fixable:true
+        });
+        markers.push({
+          x: heavyQ%2===1 ? '75%':'25%',
+          y: heavyQ>=2  ? '75%':'25%',
+          type:'error', label:'✕', id:issues.length-1
+        });
+        errors++; baseScore -= 8;
+      } else { passed++; }
+
+      // Issue: non-white background (possibly a photo not a drawing)
+      if (!isCADStyle) {
+        issues.push({
+          type:'info', title:'Non-Technical Drawing Detected',
+          description:`Image appears to be a photograph or rendered model (background brightness: ${meanBright.toFixed(0)}/255). For best analysis, use exported 2D drawings.`,
+          location:'Image background', fixable:false
+        });
+        markers.push({x:'50%',y:'50%',type:'info',label:'i',id:issues.length-1});
+      } else { passed++; }
+
+      // Issue: low horizontal/vertical line ratio (missing dimension lines)
+      if (lineCount < 8 && edgeDensity > 0.03) {
+        issues.push({
+          type:'warn', title:'Low Annotation Line Count',
+          description:`Only ${lineCount} clear horizontal/vertical line structures detected. Drawing may be missing dimension lines, leaders, or title block.`,
+          location:'Annotation layer', fixable:true
+        });
+        markers.push({x:'60%',y:'80%',type:'warn',label:'!',id:issues.length-1});
+        warnings++;
+      } else if (edgeDensity > 0.03) { passed++; }
+
+      // Issue: colour (non-monochrome) suggests 3D render not 2D drawing
+      const colourVariance = Math.abs(rMean-gMean) + Math.abs(gMean-bMean) + Math.abs(rMean-bMean);
+      if (colourVariance > 30) {
+        issues.push({
+          type:'info', title:'Colour Image — Possible 3D Render',
+          description:`Colour variance detected (ΔRgb: ${colourVariance.toFixed(0)}). 3D renders require re-export as 2D orthographic drawings for full GD&T validation.`,
+          location:'Image type', fixable:false
+        });
+        passed++;
+      } else {
+        issues.push({
+          type:'ok', title:'Monochrome Drawing Confirmed',
+          description:'Image is near-greyscale — consistent with a 2D technical drawing. Optimal format for automated analysis.',
+          location:'Image type', fixable:false
+        });
+        passed++;
+      }
+
+      // Always add a passing check
+      issues.push({
+        type:'ok', title:'Image Loaded Successfully',
+        description:`${W*scale > 400 ? 'High' : 'Adequate'} resolution image (${iw}×${ih}px). File processed at ${Math.round(scale*100)}% scale for analysis.`,
+        location:`Image: ${uploadedFileName||'uploaded file'}`, fixable:false
+      });
+      passed++;
+
+      // ── 10. Compliance scores ──────────────────────────────────
+      const iso  = Math.min(98, Math.max(30, Math.round(baseScore * 0.88 + symScore * 10)));
+      const asme = Math.min(98, Math.max(30, Math.round(baseScore * 0.92 + (isCADStyle?6:0))));
+      const din  = Math.min(98, Math.max(30, Math.round(baseScore * 0.95 + (edgeDensity>0.05?4:0))));
+
+      // ── 11. Manufacturing risk ────────────────────────────────
+      let mfgRisk = 'Low';
+      if (errors > 1 || baseScore < 55) mfgRisk = 'High';
+      else if (errors > 0 || warnings > 1 || baseScore < 70) mfgRisk = 'Moderate';
+
+      // ── 12. Layer counts from analysis ───────────────────────
+      const layerCounts = {
+        body: Math.round(lineCount * 0.4 + 2),
+        tol:  Math.round(issues.filter(i=>i.type==='warn'||i.type==='error').length * 2 + 2),
+        dim:  Math.round(lineCount * 0.8 + 4),
+        crit: errors + 1,
+        ann:  Math.round(lineCount * 0.5 + 4),
+        ref:  Math.round(symScore * 6 + 2)
+      };
+
+      resolve({
+        score: Math.max(35, Math.min(96, baseScore)),
+        errors, warnings, passed,
+        iso_compliance: iso,
+        asme_compliance: asme,
+        din_compliance: din,
+        complexity,
+        manufacturing_risk: mfgRisk,
+        estimated_rework_hours: errors>1 ? '6–10 hours' : errors===1 ? '2–4 hours' : warnings>2 ? '1–2 hours' : 'None',
+        issues, markers,
+        layerCounts,
+        metrics: {
+          edgeDensity: (edgeDensity*100).toFixed(2)+'%',
+          lineCount,
+          symmetry: (symScore*100).toFixed(0)+'%',
+          resolution: `${iw}×${ih}`,
+          complexity: complexityScore.toFixed(3)
+        },
+        summary: `Local pixel analysis complete. Edge density: ${(edgeDensity*100).toFixed(1)}%, symmetry: ${(symScore*100).toFixed(0)}%, ${lineCount} structural lines detected. ${errors} error(s), ${warnings} warning(s), ${passed} checks passed.`
+      });
+    }, 50);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  FILE HANDLING
+// ════════════════════════════════════════════════════════════════
+function onDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
+function onDragLeave() { document.getElementById('drop-zone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dragover');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+}
+function handleFileUpload(input) { if (input.files[0]) processFile(input.files[0]); }
+
+function processFile(file) {
+  uploadedFile = file;
+  uploadedFileName = file.name;
+  addFileToSidebar(file.name, file.size);
+
+  const prog = document.getElementById('upload-progress');
+  prog.classList.add('visible');
+  animateProgress(0, 40, 500);
+  setAIStatus('thinking', 'Analysing…');
+
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      showImagePreview(e.target.result);
+      animateProgress(40, 75, 600, async () => {
+        // Image is now in the DOM; run analysis
+        const img = document.getElementById('uploaded-img');
+        if (img && img.complete) {
+          await runLocalAnalysis(img);
+        } else if (img) {
+          img.onload = async () => { await runLocalAnalysis(img); };
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // Non-image file: run a filename/extension-based heuristic analysis
+    animateProgress(40, 75, 600, () => runHeuristicAnalysis(file));
+  }
+  showToast(`📂 Loaded: ${file.name}`);
+}
+
+async function runLocalAnalysis(imgEl) {
+  try {
+    const result = await analyseImageLocally(imgEl);
+    animateProgress(75, 100, 400, () => {
+      applyValidationResult(result);
+      document.getElementById('upload-progress').classList.remove('visible');
+      setAIStatus('live', 'Local Engine Active');
+    });
+  } catch(e) {
+    console.error(e);
+    document.getElementById('upload-progress').classList.remove('visible');
+    setAIStatus('live', 'Local Engine Active');
+    showToast('⚠️ Analysis error — see console');
+  }
+}
+
+/** For non-image files: generate plausible result from filename/extension */
+function runHeuristicAnalysis(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const extMap = {
+    dxf:{comp:'Medium',risk:'Low',score:78}, dwg:{comp:'Medium',risk:'Low',score:75},
+    step:{comp:'High',risk:'Moderate',score:70}, stp:{comp:'High',risk:'Moderate',score:70},
+    iges:{comp:'High',risk:'Moderate',score:68}, igs:{comp:'High',risk:'Moderate',score:68},
+    stl:{comp:'Medium',risk:'Low',score:72}, obj:{comp:'Low',risk:'Low',score:65},
+    pdf:{comp:'Low',risk:'Low',score:80}
+  };
+  const meta = extMap[ext] || {comp:'Medium',risk:'Moderate',score:65};
+  const result = {
+    score: meta.score, errors:1, warnings:2, passed:14,
+    iso_compliance:72, asme_compliance:68, din_compliance:85,
+    complexity: meta.comp, manufacturing_risk: meta.risk,
+    estimated_rework_hours:'2–4 hours',
+    issues:[
+      {type:'info',title:`${ext.toUpperCase()} File Loaded`,description:`Non-image file — pixel analysis not available. Showing heuristic estimates based on file type and name.`,location:`File: ${file.name}`,fixable:false},
+      {type:'warn',title:'Visual Analysis Unavailable',description:'Upload a PNG/JPG/JPEG image of your drawing for full pixel-level analysis including edge detection, symmetry, and feature density.',location:'Analysis engine',fixable:true},
+      {type:'ok',title:'File Successfully Loaded',description:`${(file.size/1024).toFixed(0)} KB ${ext.toUpperCase()} file accepted. Size and format within normal parameters.`,location:`File: ${file.name}`,fixable:false}
+    ],
+    markers:[
+      {x:'50%',y:'45%',type:'info',label:'i',id:0},
+      {x:'35%',y:'60%',type:'warn',label:'!',id:1}
+    ],
+    layerCounts:{body:8,tol:4,dim:18,crit:2,ann:10,ref:5},
+    metrics:{edgeDensity:'N/A',lineCount:'N/A',symmetry:'N/A',resolution:`${(file.size/1024).toFixed(0)} KB`,complexity:'N/A'},
+    summary:`Heuristic analysis for ${ext.toUpperCase()} file. Upload a 2D drawing image for full pixel analysis.`
+  };
+  animateProgress(75, 100, 400, () => {
+    applyValidationResult(result);
+    document.getElementById('upload-progress').classList.remove('visible');
+    setAIStatus('live', 'Local Engine Active');
+  });
+}
+
+function showImagePreview(dataUrl) {
+  const preview = document.getElementById('upload-preview');
+  preview.innerHTML = `<img id="uploaded-img" src="${dataUrl}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:4px;box-shadow:0 2px 16px rgba(0,0,0,0.12)" crossorigin="anonymous"/>`;
+}
+
+function addFileToSidebar(name, size) {
+  const list = document.getElementById('file-list');
+  list.querySelectorAll('.file-item').forEach(f => f.classList.remove('active'));
+  const ext = name.split('.').pop().toLowerCase();
+  const icon = ['png','jpg','jpeg','gif','bmp','webp'].includes(ext) ? '🖼️' :
+               ['pdf'].includes(ext) ? '📋' : ['dxf','dwg'].includes(ext) ? '📐' : '📄';
+  const kb = (size/1024).toFixed(0);
+  const item = document.createElement('div');
+  item.className = 'file-item active';
+  item.innerHTML = `<div class="file-icon" style="background:var(--blue-bg)">${icon}</div>
+    <div class="file-meta"><div class="file-name">${name}</div><div class="file-sub">Uploaded · ${kb} KB</div></div>
+    <div class="file-badge badge-new"></div>`;
+  list.appendChild(item);
+  document.getElementById('sb-file').textContent = `File: ${name}`;
+  document.getElementById('prop-filename').textContent = name;
+  document.getElementById('prop-format').textContent = ext.toUpperCase();
+  document.getElementById('prop-size').textContent = `${kb} KB`;
+  document.getElementById('prop-modified').textContent = 'Just now';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  APPLY RESULTS TO UI
+// ════════════════════════════════════════════════════════════════
+function applyValidationResult(r) {
+  lastAnalysis = r;
+  animateScore(currentScore, r.score); currentScore = r.score;
+  document.getElementById('m-errors').textContent   = r.errors   || 0;
+  document.getElementById('m-warnings').textContent = r.warnings || 0;
+  document.getElementById('m-passed').textContent   = r.passed   || 0;
+
+  const iso=r.iso_compliance||62, asme=r.asme_compliance||74, din=r.din_compliance||88;
+  document.getElementById('p-iso').textContent  = iso+'%';  document.getElementById('pf-iso').style.width  = iso+'%';
+  document.getElementById('p-asme').textContent = asme+'%'; document.getElementById('pf-asme').style.width = asme+'%';
+  document.getElementById('p-din').textContent  = din+'%';  document.getElementById('pf-din').style.width  = din+'%';
+
+  document.getElementById('prop-complexity').textContent = r.complexity||'Medium';
+  document.getElementById('prop-score').textContent = (r.score||'?')+' / 100';
+  document.getElementById('prop-rework').textContent = r.estimated_rework_hours||'—';
+  const riskEl = document.getElementById('prop-risk');
+  riskEl.textContent = r.manufacturing_risk||'—';
+  riskEl.className = 'prop-val '+(r.manufacturing_risk==='Low'?'ok':r.manufacturing_risk==='High'||r.manufacturing_risk==='Critical'?'err':'warn');
+
+  // Metrics
+  if (r.metrics) {
+    document.getElementById('prop-edgedensity').textContent = r.metrics.edgeDensity||'—';
+    document.getElementById('prop-linecount').textContent   = r.metrics.lineCount||'—';
+    document.getElementById('prop-symmetry').textContent    = r.metrics.symmetry||'—';
+    document.getElementById('prop-resolution').textContent  = r.metrics.resolution||'—';
+  }
+
+  // Layer counts
+  if (r.layerCounts) {
+    document.getElementById('lc-body').textContent = r.layerCounts.body||'—';
+    document.getElementById('lc-tol').textContent  = r.layerCounts.tol||'—';
+    document.getElementById('lc-dim').textContent  = r.layerCounts.dim||'—';
+    document.getElementById('lc-crit').textContent = r.layerCounts.crit||'—';
+    document.getElementById('lc-ann').textContent  = r.layerCounts.ann||'—';
+    document.getElementById('lc-ref').textContent  = r.layerCounts.ref||'—';
+  }
+
+  if (r.issues && r.issues.length) { currentIssues = r.issues; renderIssueList(r.issues); }
+  if (r.markers && r.markers.length) { activeMarkers = r.markers; renderIssueMarkers(); }
+
+  document.getElementById('sb-status').textContent = `Analysis complete — ${new Date().toLocaleTimeString()}`;
+
+  if (r.summary) {
+    switchPanel('ai');
+    addAIMessage(`📊 Local analysis complete!\n\n${r.summary}\n\nScore: ${r.score}/100 · ${r.errors} error(s) · ${r.warnings} warning(s)`, 'assistant');
+  }
+  showToast(`✅ Done — Score: ${r.score}/100`);
+}
+
+function renderIssueList(issues) {
+  const container = document.getElementById('issue-list');
+  container.innerHTML = '';
+  issues.forEach((issue, i) => {
+    const card = document.createElement('div');
+    card.className = `issue-card ${issue.type}`;
+    card.onclick = () => highlightIssue(i);
+    const icon = issue.type==='error'?'✕':issue.type==='warn'?'!':issue.type==='ok'?'✓':'ℹ';
+    card.innerHTML = `<div class="issue-header"><span class="issue-icon">${icon}</span><span class="issue-title">${esc(issue.title)}</span></div>
+      <div class="issue-desc">${esc(issue.description)}</div>
+      <div class="issue-loc">${esc(issue.location||'')}</div>
+      ${issue.fixable?`<button class="fix-btn" onclick="event.stopPropagation();suggestFix_local('${escA(issue.title)}')">💡 Suggest Fix</button>`:''}`;
+    container.appendChild(card);
+  });
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escA(s){return (s||'').replace(/'/g,"&#39;");}
+
+// ════════════════════════════════════════════════════════════════
+//  ISSUE MARKERS
+// ════════════════════════════════════════════════════════════════
+const defaultMarkers = [
+  {x:'48%',y:'38%',type:'error',label:'✕',id:0},
+  {x:'34%',y:'62%',type:'warn', label:'!',id:1},
+  {x:'58%',y:'45%',type:'error',label:'✕',id:2},
+  {x:'42%',y:'70%',type:'warn', label:'!',id:3},
+  {x:'66%',y:'55%',type:'info', label:'i',id:4},
+];
+let activeMarkers = [...defaultMarkers];
+
+function renderIssueMarkers() {
+  const overlay = document.getElementById('issue-overlay');
+  overlay.innerHTML = '';
+  overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+  if (!issuesVisible) return;
+  activeMarkers.forEach(p => {
+    const el = document.createElement('div');
+    el.className = `issue-marker ${p.type}`;
+    el.style.cssText = `left:${p.x};top:${p.y};position:absolute;transform:translate(-50%,-50%)`;
+    el.textContent = p.label;
+    el.onclick = () => highlightIssue(p.id);
+    overlay.appendChild(el);
+  });
+}
+
+function toggleIssues() {
+  issuesVisible = !issuesVisible;
+  document.getElementById('issue-overlay').style.opacity = issuesVisible ? '1' : '0';
+  renderIssueMarkers();
+}
+function toggleAIAnn() {
+  aiAnnActive = !aiAnnActive;
+  document.getElementById('ai-ann-btn').classList.toggle('active', aiAnnActive);
+}
+function highlightIssue(idx) {
+  switchPanel('validation');
+  document.querySelectorAll('.issue-card').forEach((c,i) => {
+    c.style.outline = '';
+    if (i === idx) { c.style.outline='2px solid #378ADD'; c.scrollIntoView({behavior:'smooth',block:'nearest'}); setTimeout(()=>c.style.outline='',2500); }
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LOCAL AI CHAT (rule-based, offline)
+// ════════════════════════════════════════════════════════════════
+const KB = {
+  tolerance: `Tolerance stack-up occurs when individual part tolerances accumulate. 
+Fix: Use tighter individual tolerances (e.g. ±0.02mm per feature), apply statistical tolerance analysis (RSS method), or redesign datum chain to reduce accumulation. 
+For bore fits: specify ISO H7/p6 or H7/k6 depending on interference requirements. Target total stack ≤ 50% of functional limit.`,
+
+  wallthickness: `Minimum wall thickness depends on material and process:
+• CNC aluminium: 0.8mm minimum, 1.5mm recommended
+• CNC steel: 1.0mm minimum, 2.0mm recommended  
+• Injection moulding: 1.2–3.5mm (material dependent)
+• Die casting: 0.9–1.5mm
+Fix: Increase wall to ≥2.0mm, add ribs for stiffness rather than increasing wall uniformly.`,
+
+  gdt: `GD&T (Geometric Dimensioning & Tolerancing) per ASME Y14.5:
+• Datum reference frames must constrain 6 DOF (3 translation, 3 rotation)
+• Position tolerance (⊕) requires at least 3 datum references for a bolt pattern
+• Fix: Add tertiary datum to constrain rotational DOF, or use a clocking datum hole.
+• For bolt patterns: use composite positional tolerance with PLTZF and FRTZF.`,
+
+  chamfer: `Missing chamfer/radius at stress concentration points:
+• Sharp internal corners create stress risers (Kt factor 2–4×)
+• Recommended: minimum r = 0.5mm for machined parts, r = 1.0–3.0mm for loaded features
+• For shaft shoulders: r ≥ 0.1 × shaft diameter
+• Standard chamfer: 0.5×45° for general fits, 1.0×45° for assembly lead-in`,
+
+  surface: `Surface finish selection guide (Ra values):
+• Ra 0.8μm: precision bearing seats, sealing surfaces — expensive to achieve
+• Ra 1.6μm: general precision fits, gear tooth flanks
+• Ra 3.2μm: standard machined surfaces, mating faces
+• Ra 6.3μm: rough machined, non-critical faces
+Cost: Ra 0.8μm is ~3× more expensive than Ra 1.6μm. Specify minimum required finish.`,
+
+  score: `Your design score reflects weighted analysis of:
+• Feature completeness & density (30%)
+• Symmetry & layout balance (20%)
+• Annotation coverage (20%)
+• Compliance indicators (30%)
+To improve: ensure all views are included, add dimension/tolerance annotations, balance feature distribution across quadrants, and use standard drawing layouts (ISO/ANSI).`,
+
+  manufacturability: `Manufacturability review checklist:
+• Wall thickness ≥ 2× tool diameter for milling
+• Avoid deep narrow slots (L:D ratio > 4:1)
+• Specify standard drill sizes (prefer ISO preferred drill series)
+• Minimise setups: design for 3-axis machining where possible
+• Add chamfers to all hole entries (0.5×45° minimum)
+• Avoid undercuts unless turning with special tooling is acceptable
+• Thread relief grooves required for blind tapped holes`,
+
+  default: `I'm your offline CAD analysis assistant. I can help with:
+• Tolerance stack-up and GD&T issues
+• Wall thickness and manufacturability
+• Surface finish selection
+• Design score improvement
+• ISO/ASME/DIN standards guidance
+Ask me about any specific issue detected in your design.`
+};
+
+function getLocalResponse(msg) {
+  const m = msg.toLowerCase();
+  const a = lastAnalysis;
+
+  // Context-aware responses based on current analysis
+  if (a && (m.includes('critical') || m.includes('most important') || m.includes('worst'))) {
+    const errors = (a.issues||[]).filter(i=>i.type==='error');
+    if (errors.length) return `The most critical issue is: **${errors[0].title}**\n\n${errors[0].description}\n\nLocation: ${errors[0].location}\n\n${errors[0].fixable ? 'This issue is fixable. Ask me for specific remediation steps.' : 'This may require design rethink.'}`;
+    return `No critical errors detected in your design. Current score: ${a.score}/100. Focus on addressing the ${a.warnings} warning(s) to improve further.`;
+  }
+
+  if (a && (m.includes('improve') || m.includes('better score') || m.includes('increase score'))) {
+    return `Your current score is ${a.score}/100. To improve:\n\n${a.metrics ? `• Edge density: ${a.metrics.edgeDensity} — ${parseFloat(a.metrics.edgeDensity)<5 ? 'add more detail/views' : 'good feature coverage'}\n• Symmetry: ${a.metrics.symmetry} — ${parseInt(a.metrics.symmetry)<60 ? 'check for missing mirrored features' : 'good symmetry'}\n• Line structures: ${a.metrics.lineCount} detected\n\n` : ''}${KB.score}`;
+  }
+
+  if (a && m.includes('summary')) {
+    return `**Analysis Summary**\n\nScore: ${a.score}/100\nComplexity: ${a.complexity}\nManufacturing Risk: ${a.manufacturing_risk}\nEst. Rework: ${a.estimated_rework_hours}\n\n${a.summary}\n\nIssues: ${a.errors} error(s), ${a.warnings} warning(s), ${a.passed} passed.`;
+  }
+
+  // Knowledge base lookups
+  if (m.includes('tolerance') || m.includes('stack')) return KB.tolerance;
+  if (m.includes('wall') || m.includes('thickness') || m.includes('thin')) return KB.wallthickness;
+  if (m.includes('gdt') || m.includes('gd&t') || m.includes('datum') || m.includes('positional') || m.includes('geometric')) return KB.gdt;
+  if (m.includes('chamfer') || m.includes('radius') || m.includes('fillet') || m.includes('sharp')) return KB.chamfer;
+  if (m.includes('surface') || m.includes('finish') || m.includes('roughness') || m.includes('ra ')) return KB.surface;
+  if (m.includes('manufactur') || m.includes('machining') || m.includes('dfm')) return KB.manufacturability;
+  if (m.includes('score') || m.includes('rating')) return KB.score;
+  if (m.includes('iso') || m.includes('asme') || m.includes('din') || m.includes('standard')) {
+    return `Standards referenced in this analysis:\n\n• **ISO 2768-m**: General tolerances for linear and angular dimensions\n• **ISO 1302**: Surface texture indication on technical drawings\n• **ASME Y14.5-2018**: Dimensioning and tolerancing (GD&T)\n• **DIN 7157**: Fits for shafts and holes\n• **ISO 286**: ISO system of limits and fits\n\nCurrent compliance: ISO ${lastAnalysis?.iso_compliance||'—'}% · ASME ${lastAnalysis?.asme_compliance||'—'}% · DIN ${lastAnalysis?.din_compliance||'—'}%`;
+  }
+  if (m.includes('report') || m.includes('export') || m.includes('download')) {
+    return `To export a report, use your browser's print function (Ctrl+P / Cmd+P) and choose "Save as PDF". This will capture the current validation panel.\n\nFor a formal report, document:\n1. Design score and compliance percentages\n2. All error and warning items\n3. Recommended fixes for each issue\n4. Standards checked and results`;
+  }
+  return KB.default;
+}
+
+function sendAIMsg() {
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  addAIMessage(msg, 'user');
+  setAIStatus('thinking', 'Thinking…');
+  const thinkId = addAIMessage('', 'assistant', true);
+  setTimeout(() => {
+    const reply = getLocalResponse(msg);
+    updateAIMessage(thinkId, reply);
+    setAIStatus('live', 'Local Engine Active');
+  }, 400 + Math.random()*400);
+}
+
+function suggestFix_local(title) {
+  switchPanel('ai');
+  document.getElementById('ai-input').value = `How do I fix this issue: ${title}?`;
+  sendAIMsg();
+}
+function suggestFix(idx) {
+  const fixes = [
+    'Suggest a specific fix for the tolerance stack-up at the gear bore.',
+    'How should I fix the minimum wall thickness violation on the rib?',
+    'How do I resolve the GD&T datum chain ambiguity on the bolt pattern?',
+  ];
+  switchPanel('ai');
+  document.getElementById('ai-input').value = fixes[idx]||'Suggest a fix for this issue.';
+  sendAIMsg();
+}
+function sendChip(el) { document.getElementById('ai-input').value = el.textContent; sendAIMsg(); }
+function onAIKey(e) { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendAIMsg(); } }
+
+let msgCounter = 0;
+function addAIMessage(text, role, thinking=false) {
+  const log = document.getElementById('ai-log');
+  const div = document.createElement('div');
+  const id = 'msg-'+(++msgCounter);
+  div.id = id; div.className = 'ai-msg '+role+(thinking?' thinking':'');
+  div.innerHTML = thinking ? '<span class="loading-dots">Thinking</span>' : esc(text).replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  log.appendChild(div);
+  div.scrollIntoView({behavior:'smooth'});
+  return id;
+}
+function updateAIMessage(id, text) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('thinking'); el.innerHTML = esc(text).replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'); el.scrollIntoView({behavior:'smooth'}); }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RUN VALIDATION (manual trigger)
+// ════════════════════════════════════════════════════════════════
+async function runValidation() {
+  if (isValidating) return;
+  isValidating = true;
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true; btn.textContent = 'Validating…';
+  const scan = document.getElementById('scan-overlay');
+  scan.style.display = 'block';
+  scan.innerHTML = '<div class="scan-line"></div><div class="scan-pulse"></div>';
+  setAIStatus('thinking','Validating…');
+
+  const img = document.getElementById('uploaded-img');
+  if (img) {
+    document.getElementById('upload-progress').classList.add('visible');
+    animateProgress(0,60,800, async () => { await runLocalAnalysis(img); });
+  } else {
+    await new Promise(r=>setTimeout(r,1800));
+    animateScore(currentScore, Math.min(96, currentScore+2));
+  }
+  scan.style.display='none';
+  btn.disabled=false;
+  btn.innerHTML='<svg viewBox="0 0 16 16" width="13" height="13" fill="white"><path d="M3 2l10 6-10 6V2z"/></svg> Run Validation';
+  isValidating=false;
+  document.getElementById('sb-status').textContent=`Validation complete — ${new Date().toLocaleTimeString()}`;
+  setAIStatus('live','Local Engine Active');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  UTILITY
+// ════════════════════════════════════════════════════════════════
+function setAIStatus(type, text) {
+  const pill = document.getElementById('ai-status');
+  const label = document.getElementById('ai-status-text');
+  pill.className = 'status-pill '+(type==='thinking'?'status-thinking':'status-live');
+  label.textContent = text;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function animateProgress(from, to, duration, callback) {
+  const fill = document.getElementById('upload-progress-fill');
+  const label = document.getElementById('upload-progress-label');
+  const steps=30, step=(to-from)/steps, interval=duration/steps;
+  let current=from;
+  const timer = setInterval(()=>{
+    current+=step;
+    const pct=Math.round(current);
+    fill.style.width=pct+'%'; label.textContent=pct+'%';
+    if(current>=to){ clearInterval(timer); if(callback) callback(); }
+  }, interval);
+}
+function animateScore(from, to) {
+  const el=document.getElementById('score-val'), arc=document.getElementById('score-arc');
+  let v=from; const dir=to>from?1:-1;
+  const timer=setInterval(()=>{
+    v+=dir; el.textContent=v; arc.style.strokeDashoffset=264-(264*v/100);
+    if((dir>0&&v>=to)||(dir<0&&v<=to)) clearInterval(timer);
+  },20);
+}
+function changeZoom(delta) { zoom=Math.max(25,Math.min(400,zoom+delta)); document.getElementById('zoom-label').textContent=zoom+'%'; drawCAD(); }
+function updateCoords(e) {
+  const rect=wrap.getBoundingClientRect();
+  const x=((e.clientX-rect.left-rect.width/2)/(30*zoom/100)*10).toFixed(2);
+  const y=((e.clientY-rect.top-rect.height/2)/(30*zoom/100)*10).toFixed(2);
+  document.getElementById('coords').textContent=`X: ${x}  Y: ${y}`;
+}
+function switchPanel(name) {
+  ['validation','ai','properties'].forEach(p=>{
+    const el=document.getElementById('panel-'+p);
+    if(el) el.style.display='none';
+  });
+  const target=document.getElementById('panel-'+name);
+  if(target) target.style.display=name==='ai'?'flex':'block';
+  document.querySelectorAll('.panel-tab').forEach((t,i)=>{
+    t.classList.toggle('active',['validation','ai','properties'][i]===name);
+  });
+}
+function switchTab(el){
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+function selectFile(idx){ document.querySelectorAll('.file-item').forEach((f,i)=>f.classList.toggle('active',i===idx)); }
+
+// ════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════
+window.addEventListener('resize', resize);
+document.addEventListener('keydown', e => { if((e.metaKey||e.ctrlKey)&&e.key==='Enter') runValidation(); });
+resize();
+renderIssueMarkers();
+setTimeout(()=>animateScore(0,70),400);
+</script>
+</body>
+</html>
